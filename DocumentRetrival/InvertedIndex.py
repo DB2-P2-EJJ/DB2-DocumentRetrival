@@ -7,8 +7,9 @@ class InvertedIndex:
         self._index = {}
         self._name = name
 
-    def addDocument(self, filename):
+    def addDocument(self, document):
+
         return None
 
-    def query(self, text, k = 15):
+    def query(self, text, k=15):
         return []
