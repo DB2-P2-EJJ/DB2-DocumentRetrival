@@ -1,5 +1,5 @@
 class Email:
     def __init__(self, serial_number, body, label):
-        self._serialNumber = serial_number
-        self._body = body
-        self._label = label
+        self.serialNumber = serial_number
+        self.body = body
+        self.label = label
