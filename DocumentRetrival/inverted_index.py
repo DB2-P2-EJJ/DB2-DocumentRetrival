@@ -9,32 +9,38 @@ from pathlib import Path
 
 
 class MailInvertedIndex:
-    def load_data(self):
-        with open(constant.DATA_FILE_NAME, 'r') as f:
-            csv_reader = reader(f)
-            next(csv_reader)
-            for row in csv_reader:
-                self._N += 1
-                if sys.getsizeof(self._index) + sys.getsizeof(self._terms_frequency(row[1])):
+    # def load_data(self):
+    #     with open(constant.DATA_FILE_NAME, 'r') as f:
+    #         csv_reader = reader(f)
+    #         next(csv_reader)
+    #         for row in csv_reader:
+    #             self._N += 1
+    #             if sys.getsizeof(self._index) + sys.getsizeof(self._terms_frequency(row[1])):
+    #
+    #             for (term, tf) in self._length[row[0]]:
+    #                 if term not in self._index:
+    #                     self._index[term] = []
+    #                 self._index[term].append((row[0], tf))
 
-                for (term, tf) in self._length[row[0]]:
-                    if term not in self._index:
-                        self._index[term] = []
-                    self._index[term].append((row[0], tf))
+    def load_inverted_index(self, name):
+        return False
 
-    def __init__(self, name):
-        self._stop_words = set(stopwords.words('english'))
-        self._stemmer = PorterStemmer()
-
+    def built_inverted_index(self, name):
         data_path = os.getcwd() / Path(name + '.mii')
         index_path = data_path / Path('index')
         length_path = data_path / Path('length')
         os.makedirs(index_path)
         os.makedirs(length_path)
 
+    def __init__(self, name):
+        self._stop_words = set(stopwords.words('english'))
+        self._stemmer = PorterStemmer()
         self._index = {}
         self._length = {}
         self._N = 0
+
+        if not self.load_inverted_index(name):
+            self.built_inverted_index(name)
 
     def _terms_frequency(self, text):
         tokens = [token for token in word_tokenize(text) if not token.lower() in self._stop_words]
@@ -47,4 +53,5 @@ class MailInvertedIndex:
         return list(terms.items()).sort()
 
     def query(self, text, k=15):
+
         return []
