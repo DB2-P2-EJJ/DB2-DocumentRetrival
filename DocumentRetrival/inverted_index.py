@@ -1,9 +1,11 @@
-import constant
+import os
 import sys
+import constant
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from csv import reader
+from pathlib import Path
 
 
 class MailInvertedIndex:
@@ -20,9 +22,16 @@ class MailInvertedIndex:
                         self._index[term] = []
                     self._index[term].append((row[0], tf))
 
-    def __init__(self, filename):
+    def __init__(self, name):
         self._stop_words = set(stopwords.words('english'))
         self._stemmer = PorterStemmer()
+
+        data_path = os.getcwd() / Path(name + '.mii')
+        index_path = data_path / Path('index')
+        length_path = data_path / Path('length')
+        os.makedirs(index_path)
+        os.makedirs(length_path)
+
         self._index = {}
         self._length = {}
         self._N = 0
@@ -38,5 +47,4 @@ class MailInvertedIndex:
         return list(terms.items()).sort()
 
     def query(self, text, k=15):
-
         return []
