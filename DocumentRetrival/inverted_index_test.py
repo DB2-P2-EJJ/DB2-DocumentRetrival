@@ -10,3 +10,7 @@ class InvertedIndexTest(unittest.TestCase):
         mii = MailInvertedIndex()
         self.assertIsInstance(mii, MailInvertedIndex)
         shutil.rmtree(os.getcwd() / Path('email.mii'))
+
+
+if __name__ == '__main__':
+    unittest.main()
