@@ -1,46 +1,35 @@
 import os
 import sys
+import math
 import constant
+import pickle
+import json
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from csv import reader
 from pathlib import Path
+from heapq import merge
 
 
 class MailInvertedIndex:
-    # def load_data(self):
-    #     with open(constant.DATA_FILE_NAME, 'r') as f:
-    #         csv_reader = reader(f)
-    #         next(csv_reader)
-    #         for row in csv_reader:
-    #             self._N += 1
-    #             if sys.getsizeof(self._index) + sys.getsizeof(self._terms_frequency(row[1])):
-    #
-    #             for (term, tf) in self._length[row[0]]:
-    #                 if term not in self._index:
-    #                     self._index[term] = []
-    #                 self._index[term].append((row[0], tf))
+    def _inverted_index_dir_exists(self):
+        for directory in self._dirs:
+            if not directory.is_dir():
+                return False
+        for file in self._files:
+            if not file.is_file():
+                return False
+        return True
 
-    def load_inverted_index(self, name):
-        return False
-
-    def built_inverted_index(self, name):
-        data_path = os.getcwd() / Path(name + '.mii')
-        index_path = data_path / Path('index')
-        length_path = data_path / Path('length')
-        os.makedirs(index_path)
-        os.makedirs(length_path)
-
-    def __init__(self, name):
-        self._stop_words = set(stopwords.words('english'))
-        self._stemmer = PorterStemmer()
-        self._index = {}
-        self._length = {}
-        self._N = 0
-
-        if not self.load_inverted_index(name):
-            self.built_inverted_index(name)
+    def _load_inverted_index(self):
+        if not self._inverted_index_dir_exists():
+            return False
+        temp = [self._N, self._n_index_block, self._n_length_block]
+        for i in range(len(self._files)):
+            with open(self._files[i], 'rb') as f:
+                temp[i] = pickle.load(f)
+        return True
 
     def _terms_frequency(self, text):
         tokens = [token for token in word_tokenize(text) if not token.lower() in self._stop_words]
@@ -50,9 +39,64 @@ class MailInvertedIndex:
             if term not in terms:
                 terms[term] = 0
             terms[term] += 1
-        return list(terms.items()).sort()
+        return [(k, math.log10(1 + v)) for k, v in terms.items()].sort()
+
+    def _built_index_mail(self, mail):
+        index = {}
+        for (term, tf) in self._terms_frequency(mail[1]):
+            if term not in index:
+                index[term] = []
+            index[term].append((mail[0], tf))
+        return index
+
+    def _get_index_block_path(self, i):
+        return self._dirs[0] / Path("block" + str(i) + '.json')
+
+    def _save_index_block(self):
+        with open(self._get_index_block_path(self._n_index_block)) as f:
+            json.dump(self._index, f)
+        self._index = {}
+
+    def _add_index(self, index):
+        for (t, l) in index.items():
+            if t not in self._index:
+                self._index[t] = l
+            else:
+                self._index[t] = list(merge(self._index[t], l))
+
+    def _built_inverted_index(self):
+        for directory in self._dirs:
+            os.makedirs(directory)
+        with open(constant.DATA_FILE_NAME, 'r') as f:
+            csv_reader = reader(f)
+            next(csv_reader)
+            for mail in csv_reader:
+                self._N += 1
+                index = self._built_index_mail(mail)
+                if sys.getsizeof(index) + sys.getsizeof(self._index) > constant.BLOCK_INDEX_SIZE:
+                    self._save_index_block()
+                self._add_index(index)
+
+    def __init__(self):
+        self._stop_words = set(stopwords.words('english'))
+        self._stemmer = PorterStemmer()
+
+        self._inverted_index_path = os.getcwd() / Path('email.mii')
+        self._dirs = [self._inverted_index_path / p for p in [Path('index'), Path('length')]]
+        self._files = [self._inverted_index_path / p for p in
+                       [Path('N.bin'), Path('n_index_block.bin'), Path('n_length_block.bin')]]
+
+        self._index = {}
+        self._length = {}
+        self._N = 0
+        self._n_index_block = 0
+        self._n_length_block = 0
+
+        if not self._load_inverted_index():
+            self._built_inverted_index()
 
     def query(self, text, k=15):
+
         score = {}
 
         query_terms = self.convert_characteristic_vector(text)
