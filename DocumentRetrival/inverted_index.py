@@ -7,9 +7,11 @@ import json
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-from csv import reader
+from csv import reader, field_size_limit
 from pathlib import Path
 from heapq import merge
+
+field_size_limit(sys.maxsize)
 
 
 class MailInvertedIndex:
@@ -39,7 +41,9 @@ class MailInvertedIndex:
             if term not in terms:
                 terms[term] = 0
             terms[term] += 1
-        return [(k, math.log10(1 + v)) for k, v in terms.items()].sort()
+        result = [(k, math.log10(1 + v)) for k, v in terms.items()]
+        result.sort()
+        return result
 
     def _built_index_mail(self, mail):
         index = {}
@@ -53,9 +57,10 @@ class MailInvertedIndex:
         return self._dirs[0] / Path("block" + str(i) + '.json')
 
     def _save_index_block(self):
-        with open(self._get_index_block_path(self._n_index_block)) as f:
+        with open(self._get_index_block_path(self._n_index_block), 'w') as f:
             json.dump(self._index, f)
         self._index = {}
+        self._n_index_block += 1
 
     def _add_index(self, index):
         for (t, l) in index.items():
@@ -78,7 +83,7 @@ class MailInvertedIndex:
                 self._add_index(index)
 
     def __init__(self):
-        self._stop_words = set(stopwords.words('english'))
+        self._stop_words = set(stopwords.words('english') + ['subject'])
         self._stemmer = PorterStemmer()
 
         self._inverted_index_path = os.getcwd() / Path('email.mii')
