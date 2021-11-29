@@ -9,4 +9,4 @@ class InvertedIndexTest(unittest.TestCase):
     def test_constructor(self):
         mii = MailInvertedIndex()
         self.assertIsInstance(mii, MailInvertedIndex)
-        # shutil.rmtree(os.getcwd() / Path('email.mii'))
+        shutil.rmtree(os.getcwd() / Path('email.mii'))
