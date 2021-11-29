@@ -1,3 +1,6 @@
+.idea/
+*.mii/
+
 # Prerequisites
 *.d
 
