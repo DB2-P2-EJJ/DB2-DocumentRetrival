@@ -8,7 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DocumentRetrival/constant.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/constant.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DocumentRetrival/inverted_index.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/inverted_index.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DocumentRetrival/inverted_index_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/inverted_index_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,9 +42,9 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/DocumentRetrival/inverted_index_test.py" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python tests.Tests">
     <configuration name="inverted_index_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -67,6 +66,25 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="Tests" type="tests" factoryName="Unittests">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="/usr/bin/python3.8" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="_new_pattern" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/DocumentRetrival/inverted_index_test.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.inverted_index_test" />
+      <item itemvalue="Python tests.Tests" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.inverted_index_test" />
@@ -97,11 +115,34 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
+          <line>142</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
+          <line>130</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
+          <line>114</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
+      <configuration name="tests">
+        <watch expression="math.ceil(math.log2(self._n_index_block))" language="Python" />
+        <watch expression="self._n_index_block" language="Python" />
+        <watch expression="wp" language="Python" />
+      </configuration>
       <configuration name="PythonConfigurationType">
-        <watch expression="sys.getsizeof(temp_index)" language="Python" />
-        <watch expression="sys.getsizeof(self._index)" language="Python" />
         <watch expression="constant.BLOCK_INDEX_SIZE" language="Python" />
+        <watch expression="sys.getsizeof(self._index)" language="Python" />
       </configuration>
     </watches-manager>
   </component>

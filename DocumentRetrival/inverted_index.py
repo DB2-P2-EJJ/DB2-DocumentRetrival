@@ -90,56 +90,57 @@ class MailInvertedIndex:
             json.dump(block, f)
 
     def _merge_blocks(self, wp, pa, pb, bs):
-        block_a = self._get_block(pa)
-        block_b = self._get_block(pb)
-
-        block_c = {}
-        block_c_temp = {}
-
-        key_a = sorted(block_a.keys())
-        key_b = sorted(block_b.keys())
-        i = 0
-        j = 0
-        while i < len(key_a) and j < len(key_b):
-            if key_a[i] == key_b[j]:
-                key = key_a[i]
-                ld = list(merge(block_a[key], block_b[key]))
-                i += 1
-                j += 1
-            else:
-                b = block_a if key_a[i] < key_b[j] else block_b
-                key = min(key_a[i], key_b[i])
-                ld = b[key]
-                if key_a[i] < key_b[j]:
+        pae, pbe = pa + bs, pb + bs
+        i, j = 0, 0
+        while self._get_block(pa) is not None and pa < pae and self._get_block(pb) is not None and pb < pbe:
+            block_a, block_b = self._get_block(pa), self._get_block(pb)
+            block_c, block_c_temp = {}, {}
+            key_a, key_b = sorted(block_a.keys()), sorted(block_b.keys())
+            while i < len(key_a) and j < len(key_b):
+                if key_a[i] == key_b[j]:
+                    key = key_a[i]
+                    ld = list(merge(block_a[key], block_b[key]))
                     i += 1
-                else:
                     j += 1
-
-            block_c_temp[key] = ld
-            if sys.getsizeof(block_c_temp) > constant.BLOCK_INDEX_SIZE:
-                self._save_block(block_c, wp)
+                else:
+                    b = block_a if key_a[i] < key_b[j] else block_b
+                    key = min(key_a[i], key_b[j])
+                    ld = b[key]
+                    if key_a[i] < key_b[j]:
+                        i += 1
+                    else:
+                        j += 1
+                block_c_temp[key] = ld
+                if sys.getsizeof(block_c_temp) > constant.BLOCK_INDEX_SIZE:
+                    self._save_block(block_c, wp)
+                    wp += 1
+                    block_c_temp = {key: ld}
+                    block_c = {}
+                block_c[key] = ld
+            if i >= len(key_a):
+                pa += 1
+                i = 0
+            if j >= len(key_b):
+                pb += 1
+                j = 0
+        for pointer, pointer_end in [(pa, pae), (pb, pbe)]:
+            while self._get_block(pointer) is not None and pointer < pointer_end:
+                self._save_block(self._get_block(pointer), wp)
                 wp += 1
-                block_c_temp = {key: ld}
-                block_c = {}
-            block_c[key] = ld
-        if i >= len(key_a):
-            pa += 1
-        if j >= len(key_b):
-            pb += 1
+                pointer += 1
+        return wp
 
     def _block_sorting(self):
         for bs in [2 ** i for i in range(math.ceil(math.log2(self._n_index_block)))]:
-            bp = bs
-            while bp < self._n_index_block():
-                self._merge_blocks(bp, bp, bp + bs, bs)
-
-        return None
+            wp = 0
+            while wp < self._n_index_block:
+                wp = self._merge_blocks(wp, wp, wp + bs, bs)
 
     def _built_inverted_index(self):
         for directory in self._dirs:
             os.makedirs(directory)
         self._built_block_index()
-        # self._block_sorting()
+        self._block_sorting()
 
     def __init__(self):
         self._stop_words = set(stopwords.words('english') + ['subject'])
