@@ -28,9 +28,9 @@ class MailInvertedIndex:
         if not self._inverted_index_dir_exists():
             return False
         temp = [self._N, self._n_index_block, self._n_length_block]
-        for i in range(len(self._files)):
-            with open(self._files[i], 'rb') as f:
-                temp[i] = pickle.load(f)
+        for index in range(len(self._files)):
+            with open(self._files[index], 'rb') as f:
+                temp[index] = pickle.load(f)
         return True
 
     def _terms_frequency(self, text):
@@ -41,9 +41,7 @@ class MailInvertedIndex:
             if term not in terms:
                 terms[term] = 0
             terms[term] += 1
-        result = [(k, math.log10(1 + v)) for k, v in terms.items()]
-        result.sort()
-        return result
+        return sorted([(k, math.log10(1 + v)) for k, v in terms.items()])
 
     def _built_index_mail(self, mail):
         index = {}
@@ -53,8 +51,8 @@ class MailInvertedIndex:
             index[term].append((mail[0], tf))
         return index
 
-    def _get_index_block_path(self, i):
-        return self._dirs[0] / Path("block" + str(i) + '.json')
+    def _get_index_block_path(self, index):
+        return self._dirs[0] / Path("block" + str(index) + '.json')
 
     def _save_index_block(self):
         with open(self._get_index_block_path(self._n_index_block), 'w') as f:
@@ -74,19 +72,74 @@ class MailInvertedIndex:
                     temp_index[t] = ld if t not in temp_index else list(merge(temp_index[t], ld))
                     if sys.getsizeof(temp_index) > constant.BLOCK_INDEX_SIZE:
                         self._save_index_block()
-                        temp_index = {}
+                        temp_index = {t: ld}
                     self._index[t] = ld if t not in self._index else list(merge(self._index[t], ld))
             if self._index != {}:
                 self._save_index_block()
 
+    def _get_block(self, bp):
+        block_path = self._get_index_block_path(bp)
+        block = None
+        if block_path.is_file():
+            with open(block_path) as f:
+                block = json.load(f)
+        return block
+
+    def _save_block(self, block, bp):
+        with open(self._get_index_block_path(bp), 'w') as f:
+            json.dump(block, f)
+
+    def _merge_blocks(self, wp, pa, pb, bs):
+        block_a = self._get_block(pa)
+        block_b = self._get_block(pb)
+
+        block_c = {}
+        block_c_temp = {}
+
+        key_a = sorted(block_a.keys())
+        key_b = sorted(block_b.keys())
+        i = 0
+        j = 0
+        while i < len(key_a) and j < len(key_b):
+            if key_a[i] == key_b[j]:
+                key = key_a[i]
+                ld = list(merge(block_a[key], block_b[key]))
+                i += 1
+                j += 1
+            else:
+                b = block_a if key_a[i] < key_b[j] else block_b
+                key = min(key_a[i], key_b[i])
+                ld = b[key]
+                if key_a[i] < key_b[j]:
+                    i += 1
+                else:
+                    j += 1
+
+            block_c_temp[key] = ld
+            if sys.getsizeof(block_c_temp) > constant.BLOCK_INDEX_SIZE:
+                self._save_block(block_c, wp)
+                wp += 1
+                block_c_temp = {key: ld}
+                block_c = {}
+            block_c[key] = ld
+        if i >= len(key_a):
+            pa += 1
+        if j >= len(key_b):
+            pb += 1
+
     def _block_sorting(self):
+        for bs in [2 ** i for i in range(math.ceil(math.log2(self._n_index_block)))]:
+            bp = bs
+            while bp < self._n_index_block():
+                self._merge_blocks(bp, bp, bp + bs, bs)
+
         return None
 
     def _built_inverted_index(self):
         for directory in self._dirs:
             os.makedirs(directory)
         self._built_block_index()
-        self._block_sorting()
+        # self._block_sorting()
 
     def __init__(self):
         self._stop_words = set(stopwords.words('english') + ['subject'])
