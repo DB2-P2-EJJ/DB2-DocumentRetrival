@@ -62,25 +62,31 @@ class MailInvertedIndex:
         self._index = {}
         self._n_index_block += 1
 
-    def _add_index(self, index):
-        for (t, l) in index.items():
-            if t not in self._index:
-                self._index[t] = l
-            else:
-                self._index[t] = list(merge(self._index[t], l))
+    def _built_block_index(self):
+        with open(constant.DATA_FILE_NAME, 'r') as f:
+            csv_reader = reader(f)
+            next(csv_reader)
+            temp_index = {}
+            for mail in csv_reader:
+                self._N += 1
+                index = self._built_index_mail(mail)
+                for (t, ld) in index.items():
+                    temp_index[t] = ld if t not in temp_index else list(merge(temp_index[t], ld))
+                    if sys.getsizeof(temp_index) > constant.BLOCK_INDEX_SIZE:
+                        self._save_index_block()
+                        temp_index = {}
+                    self._index[t] = ld if t not in self._index else list(merge(self._index[t], ld))
+            if self._index != {}:
+                self._save_index_block()
+
+    def _block_sorting(self):
+        return None
 
     def _built_inverted_index(self):
         for directory in self._dirs:
             os.makedirs(directory)
-        with open(constant.DATA_FILE_NAME, 'r') as f:
-            csv_reader = reader(f)
-            next(csv_reader)
-            for mail in csv_reader:
-                self._N += 1
-                index = self._built_index_mail(mail)
-                if sys.getsizeof(index) + sys.getsizeof(self._index) > constant.BLOCK_INDEX_SIZE:
-                    self._save_index_block()
-                self._add_index(index)
+        self._built_block_index()
+        self._block_sorting()
 
     def __init__(self):
         self._stop_words = set(stopwords.words('english') + ['subject'])

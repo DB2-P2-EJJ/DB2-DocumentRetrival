@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e960f4a-7a09-4fd3-8a54-4a4dd684b42d" name="Changes" comment="" />
+    <list default="true" id="2e960f4a-7a09-4fd3-8a54-4a4dd684b42d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DocumentRetrival/constant.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/constant.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DocumentRetrival/inverted_index.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/inverted_index.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DocumentRetrival/inverted_index_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/inverted_index_test.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -38,7 +43,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/DocumentRetrival/inverted_index_test.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RunManager">
     <configuration name="inverted_index_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -90,5 +95,28 @@
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
+          <line>74</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
+          <line>75</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="sys.getsizeof(temp_index)" language="Python" />
+        <watch expression="sys.getsizeof(self._index)" language="Python" />
+        <watch expression="constant.BLOCK_INDEX_SIZE" language="Python" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>
