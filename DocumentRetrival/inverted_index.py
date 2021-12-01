@@ -43,22 +43,26 @@ class MailInvertedIndex:
             terms[term] += 1
         return sorted([(k, math.log10(1 + v)) for k, v in terms.items()])
 
+    def _get_block(self, dir, bp):
+        block_path = self._inverted_index_path / Path(dir) / Path('block' + str(bp) + '.json')
+        block = None
+        if block_path.is_file():
+            with open(block_path) as f:
+                block = json.load(f)
+        return block
+
+    def _save_block(self, dir, bp, block):
+        block_path = self._inverted_index_path / Path(dir) / Path('block' + str(bp) + '.json')
+        with open(block_path, 'w') as f:
+            json.dump(block, f, indent=4, sort_keys=True)
+
     def _built_index_mail(self, mail):
         index = {}
         for (term, tf) in self._terms_frequency(mail[1]):
             if term not in index:
                 index[term] = []
-            index[term].append((mail[0], tf))
+            index[term].append((int(mail[0]), tf))
         return index
-
-    def _get_index_block_path(self, index):
-        return self._dirs[0] / Path("block" + str(index) + '.json')
-
-    def _save_index_block(self):
-        with open(self._get_index_block_path(self._n_index_block), 'w') as f:
-            json.dump(self._index, f)
-        self._index = {}
-        self._n_index_block += 1
 
     def _built_block_index(self):
         with open(constant.DATA_FILE_NAME, 'r') as f:
@@ -71,83 +75,85 @@ class MailInvertedIndex:
                 for (t, ld) in index.items():
                     temp_index[t] = ld if t not in temp_index else list(merge(temp_index[t], ld))
                     if sys.getsizeof(temp_index) > constant.BLOCK_INDEX_SIZE:
-                        self._save_index_block()
+                        self._save_block('index', self._n_index_block, self._index)
+                        self._n_index_block += 1
                         temp_index = {t: ld}
+                        self._index = {}
                     self._index[t] = ld if t not in self._index else list(merge(self._index[t], ld))
-            if self._index != {}:
-                self._save_index_block()
+        self._save_block('index', self._n_index_block, self._index)
+        self._n_index_block += 1
+        self._index = {}
 
-    def _get_block(self, bp):
-        block_path = self._get_index_block_path(bp)
-        block = None
-        if block_path.is_file():
-            with open(block_path) as f:
-                block = json.load(f)
-        return block
-
-    def _save_block(self, block, bp):
-        with open(self._get_index_block_path(bp), 'w') as f:
-            json.dump(block, f)
-
-    def _merge_blocks(self, wp, pa, pb, bs):
-        pae, pbe = pa + bs, pb + bs
-        i, j = 0, 0
-        while self._get_block(pa) is not None and pa < pae and self._get_block(pb) is not None and pb < pbe:
-            block_a, block_b = self._get_block(pa), self._get_block(pb)
-            block_c, block_c_temp = {}, {}
-            key_a, key_b = sorted(block_a.keys()), sorted(block_b.keys())
-            while i < len(key_a) and j < len(key_b):
-                if key_a[i] == key_b[j]:
-                    key = key_a[i]
-                    ld = list(merge(block_a[key], block_b[key]))
-                    i += 1
-                    j += 1
+    def _merge_blocks(self, i_1, j_1, i_2, j_2):
+        wp, p1, p2 = i_1, i_1, i_2
+        kp1, kp2 = 0, 0
+        b3, temp_b3 = {}, {}
+        while p1 <= j_1 and p2 <= j_2:
+            b1, b2 = self._get_block('index', p1), self._get_block('index', p2)
+            keys_b1, keys_b2 = sorted(b1.keys()), sorted(b2.keys())
+            while kp1 < len(keys_b1) and kp2 < len(keys_b2):
+                if keys_b1[kp1] == keys_b2[kp2]:
+                    key = keys_b1[kp1]
+                    ld = list(merge(b1[key], b2[key]))
+                    kp1 += 1
+                    kp2 += 1
                 else:
-                    b = block_a if key_a[i] < key_b[j] else block_b
-                    key = min(key_a[i], key_b[j])
+                    b = b1 if keys_b1[kp1] < keys_b2[kp2] else b2
+                    key = min(keys_b1[kp1], keys_b2[kp2])
                     ld = b[key]
-                    if key_a[i] < key_b[j]:
-                        i += 1
+                    if keys_b1[kp1] < keys_b2[kp2]:
+                        kp1 += 1
                     else:
-                        j += 1
-                block_c_temp[key] = ld
-                if sys.getsizeof(block_c_temp) > constant.BLOCK_INDEX_SIZE:
-                    self._save_block(block_c, wp)
+                        kp2 += 1
+                temp_b3[key] = ld
+                if sys.getsizeof(temp_b3) > constant.BLOCK_INDEX_SIZE:
+                    self._save_block('temp_index', wp, b3)
                     wp += 1
-                    block_c_temp = {key: ld}
-                    block_c = {}
-                block_c[key] = ld
-            if i >= len(key_a):
-                pa += 1
-                i = 0
-            if j >= len(key_b):
-                pb += 1
-                j = 0
-        for pointer, pointer_end in [(pa, pae), (pb, pbe)]:
-            while self._get_block(pointer) is not None and pointer < pointer_end:
-                self._save_block(self._get_block(pointer), wp)
-                wp += 1
-                pointer += 1
-        return wp
+                    temp_b3 = {key: ld}
+                    b3 = {}
+                b3[key] = ld
+            if kp1 >= len(keys_b1):
+                p1 += 1
+                kp1 = 0
+            if kp2 >= len(keys_b2):
+                p2 += 1
+                kp2 = 0
 
-    def _block_sorting(self):
-        for bs in [2 ** i for i in range(math.ceil(math.log2(self._n_index_block)))]:
-            wp = 0
-            while wp < self._n_index_block:
-                wp = self._merge_blocks(wp, wp, wp + bs, bs)
+        for p, j in [(p1, j_1), (p2, j_2)]:
+            while p < j:
+                b = self._get_block('index', p)
+                for key in sorted(b.keys()):
+                    ld = list(merge(temp_b3[key], b[key])) if key in temp_b3 else b[key]
+                    temp_b3[key] = ld
+                    if sys.getsizeof(temp_b3) > constant.BLOCK_INDEX_SIZE:
+                        self._save_block('temp_index', wp, b3)
+                        wp += 1
+                        temp_b3 = {key: ld}
+                        b3 = {}
+                    b3[key] = ld
+                p += 1
+        self._save_block('temp_index', wp, b3)
+        wp += 1
+
+    def _block_sorting(self, i, j):
+        if i < j:
+            mid = (j + i) // 2
+            self._block_sorting(i, mid)
+            self._block_sorting(mid + 1, j)
+            self._merge_blocks(i, mid, mid + 1, j)
 
     def _built_inverted_index(self):
         for directory in self._dirs:
             os.makedirs(directory)
         self._built_block_index()
-        self._block_sorting()
+        self._block_sorting(0, self._n_index_block - 1)
 
     def __init__(self):
         self._stop_words = set(stopwords.words('english') + ['subject'])
         self._stemmer = PorterStemmer()
 
         self._inverted_index_path = os.getcwd() / Path('email.mii')
-        self._dirs = [self._inverted_index_path / p for p in [Path('index'), Path('length')]]
+        self._dirs = [self._inverted_index_path / p for p in [Path('index'), Path('length'), Path('temp_index')]]
         self._files = [self._inverted_index_path / p for p in
                        [Path('N.bin'), Path('n_index_block.bin'), Path('n_length_block.bin')]]
 

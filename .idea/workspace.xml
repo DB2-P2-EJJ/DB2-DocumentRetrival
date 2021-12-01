@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="2e960f4a-7a09-4fd3-8a54-4a4dd684b42d" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DocumentRetrival/constant.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/constant.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DocumentRetrival/Dataset/lingSpam.csv" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/Dataset/lingSpam.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DocumentRetrival/Dataset/test.csv" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/Dataset/test.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DocumentRetrival/inverted_index.py" beforeDir="false" afterPath="$PROJECT_DIR$/DocumentRetrival/inverted_index.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -115,30 +116,23 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
-          <line>142</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
-          <line>130</line>
-          <option name="timeStamp" value="14" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DocumentRetrival/inverted_index.py</url>
-          <line>114</line>
-          <option name="timeStamp" value="15" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
-        <watch expression="math.ceil(math.log2(self._n_index_block))" language="Python" />
-        <watch expression="self._n_index_block" language="Python" />
-        <watch expression="wp" language="Python" />
+        <watch expression="p1" />
+        <watch expression="j_1" />
+        <watch expression="p2" />
+        <watch expression="j_2" />
+        <watch expression="kp1" />
+        <watch expression="kp2" />
+        <watch expression="len(keys_b1)" language="Python" />
+        <watch expression="len(keys_b2)" language="Python" />
+        <watch expression="temp_b3" />
+        <watch expression="b3" />
+        <watch expression="keys_b1" />
+        <watch expression="keys_b2" />
+        <watch expression="key" />
+        <watch expression="keys_b1[kp1]" language="Python" />
+        <watch expression="keys_b2[kp2]" language="Python" />
       </configuration>
       <configuration name="PythonConfigurationType">
         <watch expression="constant.BLOCK_INDEX_SIZE" language="Python" />
