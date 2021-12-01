@@ -4,6 +4,7 @@ import math
 import constant
 import pickle
 import json
+import numpy as np
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -157,16 +158,73 @@ class MailInvertedIndex:
         self._n_index_block = 0
         self._n_length_block = 0
 
+        self._norms = {}
+
         if not self._load_inverted_index():
             self._built_inverted_index()
 
+    def _binary_search(self, left, right, term):
+        mid = 0
+        block_m = None
+        while left < right:
+            mid = (right - left)/2 + left
+            block_m = self._get_block(mid)
+            list_blocks = list(block_m.items())
+            if mid > 0 and term not in block_m[mid] and term > list_blocks[-1][0]:
+                left = mid + 1
+                continue
+            elif mid > 0 and term not in block_m[mid] and term < list_blocks[0][0]:
+                right = mid - 1
+                continue
+        if mid > 0 and term in block_m[mid]:
+            a = list(block_m[mid].items())[0][0]
+            b = list(block_m[mid-1].items())[-1][0]
+            if a == term and b == term:
+                docs_a = list(block_m[mid].items())[0][1]
+                docs_b = list(block_m[mid-1].items())[0][1]
+                docs_a.append(docs_b)
+                return {term: docs_a}
+            c = list(block_m[mid].items())[-1][0]
+            d = list(block_m[mid+1].items())[0][0]
+            if c == term and d == term:
+                docs_c = list(block_m[mid].items())[-1][1]
+                docs_d = list(block_m[mid + 1].items())[0][1]
+                docs_c.append(docs_d)
+                return {term: docs_c}
+            return {term: block_m[mid][term]}
+        else:
+            return None
+
+    def _get_tfidf(self, tf):
+        q_terms = [t[0] for t in tf]
+        freqs = [t[1] for t in tf]
+        v_query = [np.log10(self._N / len(self._binary_search(0, self._N, t)) for t in q_terms)]
+        return np.dot(freqs, v_query)
+
+    def _get_length_block_path(self, index):
+        return self._dirs[1] / Path("block" + str(index) + '.json')
+
+    def _get_length_block(self, bp):
+        block_path = self._get_length_block_path(bp)
+        block = None
+        if block_path.is_file():
+            with open(block_path) as f:
+                block = json.load(f)
+        return block
+
+    def _get_norms(self, index):
+        # pendiente
+        return
+
+    def _compute_norm(self, vector):
+        v = np.array(vector)
+        return np.linalg.norm(v)
+
     def query(self, text, k=15):
-
         score = {}
-
-        query_terms = self.convert_characteristic_vector(text)
-        w_query = self.get_TFIDF(query_terms)
-
+        tf = self._terms_frequency(text)
+        query_terms = [t[0] for t in tf]
+        w_query = self._get_tfidf(tf)
         for term in query_terms:
             list_pub = self._index[term]['pub']
             idf = self._index[term]['idf']
@@ -175,8 +233,10 @@ class MailInvertedIndex:
                     score[doc_id] = 0
                 tf_idf_doc = tf * idf
                 score[doc_id] += tf_idf_doc * w_query[term]
-        norm_query = self.compute_norm(query_terms)
+        norm_query = self._compute_norm(query_terms)
+        index_norms = self._norms
+        # self._get_norms()
         for doc_id in score:
-            score[doc_id] = score[doc_id] / (self._norms * norm_query)
+            score[doc_id] = score[doc_id] / (index_norms * norm_query)
         result = sorted(score.items(), reverse=True, key=lambda tup: tup[1])
         return result[:k]
