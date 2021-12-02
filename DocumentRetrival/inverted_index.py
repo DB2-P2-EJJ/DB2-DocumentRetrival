@@ -1,6 +1,9 @@
 import os
 import sys
 import math
+
+import numpy as np
+
 import constant
 import pickle
 import json
@@ -154,12 +157,36 @@ class MailInvertedIndex:
             self._block_sorting(mid + 1, j)
             self._merge_blocks(i, mid, mid + 1, j)
 
+    def _get_term(self, term):
+        return []
+
     def _documents_normalization(self):
         with open(constant.DATA_FILE_NAME, 'r') as f:
             csv_reader = reader(f)
             next(csv_reader)
+            temp_length = {}
             for mail in csv_reader:
-                self._terms_frequency(mail.csv)
+                terms = self._terms_frequency(mail[1])
+                for i in range(len(terms)):
+                    terms[i][1] *= math.log10(self._N / len(self._get_term(terms[i][0])))
+                temp_length[mail[0]] = np.linalg.norm(terms)
+                if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
+                    self._save_block('length', self._n_length_block, self._length)
+                    self._n_length_block += 1
+                    temp_length = {mail[0], np.linalg.norm(terms)}
+                    self._length = {}
+                self._length[mail[0]] = np.linalg.norm(terms)
+        self._save_block('length', self._n_length_block, self._length)
+        self._n_length_block += 1
+        self._length = {}
+
+    def _save_n(self):
+        data = [self._N, self._n_index_block, self._n_length_block]
+        i = 0
+        for file in self._files:
+            with open(file, 'wb') as f:
+                pickle.dump(data[i], f)
+                i += 1
 
     def _built_inverted_index(self):
         for directory in self._dirs:
@@ -167,6 +194,7 @@ class MailInvertedIndex:
         self._built_block_index()
         self._block_sorting(0, self._n_index_block - 1)
         # self._documents_normalization()
+        self._save_n()
 
     def __init__(self):
         self._stop_words = set(stopwords.words('english') + ['subject'])
