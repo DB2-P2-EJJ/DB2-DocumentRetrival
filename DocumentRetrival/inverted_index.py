@@ -164,11 +164,12 @@ class MailInvertedIndex:
                 terms = self._terms_frequency(mail[1])
                 for i in range(len(terms)):
                     terms[i][1] *= math.log10(self._N / len(self._get_term_frequencies(terms[i][0])))
+                terms = [t[1] for t in terms]
                 temp_length[mail[0]] = np.linalg.norm(terms)
                 if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
                     self._save_block('length', self._n_length_block, self._length)
                     self._n_length_block += 1
-                    temp_length = {mail[0], np.linalg.norm(terms)}
+                    temp_length = {mail[0]: np.linalg.norm(terms)}
                     self._length = {}
                 self._length[mail[0]] = np.linalg.norm(terms)
         self._save_block('length', self._n_length_block, self._length)
