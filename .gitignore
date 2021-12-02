@@ -1,3 +1,4 @@
+.idea/
 *.mii/
 
 # Prerequisites
@@ -32,5 +33,3 @@
 *.exe
 *.out
 *.app
-
-.idea/
