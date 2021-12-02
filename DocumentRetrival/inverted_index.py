@@ -1,9 +1,6 @@
 import os
 import sys
 import math
-
-import numpy as np
-
 import constant
 import pickle
 import json
@@ -158,9 +155,6 @@ class MailInvertedIndex:
             self._block_sorting(mid + 1, j)
             self._merge_blocks(i, mid, mid + 1, j)
 
-    def _get_term(self, term):
-        return []
-
     def _documents_normalization(self):
         with open(constant.DATA_FILE_NAME, 'r') as f:
             csv_reader = reader(f)
@@ -227,40 +221,27 @@ class MailInvertedIndex:
                 return False
         return True
 
-    def _binary_search(self, left, right, term):
-        mid = 0
-        block_m = None
-        while left < right:
-            mid = (right - left) / 2 + left
-            block_m = self._get_block(mid)
-            list_blocks = list(block_m.items())
-            if mid > 0 and term not in block_m[mid] and term > list_blocks[-1][0]:
-                left = mid + 1
-                continue
-            elif mid > 0 and term not in block_m[mid] and term < list_blocks[0][0]:
-                right = mid - 1
-                continue
-        if mid > 0 and term in block_m[mid]:
-            a = list(block_m[mid].items())[0][0]
-            b = list(block_m[mid - 1].items())[-1][0]
-            if a == term and b == term:
-                docs_a = list(block_m[mid].items())[0][1]
-                docs_b = list(block_m[mid - 1].items())[0][1]
-                docs_a.append(docs_b)
-                return {term: docs_a}
-            c = list(block_m[mid].items())[-1][0]
-            d = list(block_m[mid + 1].items())[0][0]
-            if c == term and d == term:
-                docs_c = list(block_m[mid].items())[-1][1]
-                docs_d = list(block_m[mid + 1].items())[0][1]
-                docs_c.append(docs_d)
-                return {term: docs_c}
-            return {term: block_m[mid][term]}
-        else:
-            return None
+    def _binary_search(self, x, n, direc):
+        low = 0
+        high = n - 1
+        res = -1
+        while low <= high:
+            mid = (low + high) // 2
+            block = self._get_block(direc, mid)
+            block_keys = sorted(block.keys())
+            if block[block_keys[0]] > x or not block:
+                high = mid - 1
+            elif block[block_keys[-1]] < x:
+                low = mid + 1
+            else:
+                res = mid
+                high = mid - 1
+        return res
 
     def _get_term_frequencies(self, term):
-        bp = self._binary_search(0, self._N - 1, term)
+        bp = self._binary_search(term, self._n_index_block, "index")
+        if bp == -1:
+            return []
         block = self._get_block("index", bp)
         result = []
         while term in block:
@@ -286,13 +267,9 @@ class MailInvertedIndex:
                 block = json.load(f)
         return block
 
-    def _get_doc_normalization(self, index):
-        # pendiente
-        return
-
-    def _compute_norm(self, vector):
-        v = np.array(vector)
-        return np.linalg.norm(v)
+    def _get_doc_normalization(self, doc):
+        bp = self._binary_search(doc, self._n_length_block, "length")
+        return 0.0 if bp == -1 else self._get_block("length", bp)[doc]
 
     def query(self, text, k=15):
         score = {}
@@ -307,10 +284,8 @@ class MailInvertedIndex:
                     score[doc_id] = 0
                 tf_idf_doc = tf * idf
                 score[doc_id] += tf_idf_doc * w_query[term]
-        norm_query = self._compute_norm(query_terms)
-        index_norms = self._norms
-        # self._get_doc_normalization()
+        norm_query = np.linalg.norm(query_terms)
         for doc_id in score:
-            score[doc_id] = score[doc_id] / (index_norms * norm_query)
+            score[doc_id] = score[doc_id] / (self._get_doc_normalization(doc_id) * norm_query)
         result = sorted(score.items(), reverse=True, key=lambda tup: tup[1])
         return result[:k]

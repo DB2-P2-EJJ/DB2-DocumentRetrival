@@ -1,8 +1,7 @@
-
 import PySimpleGUI as sg
 import os.path
 
-from call_index import get_data, process_index, obtain
+from call_index import get_data, process_index
 
 # Set path from computer
 BROWSE_PATH = "/home/jlr/Desktop/CICLO6/BD2/PROJECTS/CSV"
@@ -10,6 +9,7 @@ selected_filename = None
 query = None
 full_data = None
 selected_doc = None
+
 
 def main():
     global selected_filename, query, full_data, selected_doc
@@ -35,7 +35,7 @@ def main():
         [sg.Text("Consulta"), sg.In(size=(70, 1), enable_events=True, key="-QUERY-"),
          sg.Button("  Consultar  ", key="-SEARCH-")],
         [sg.Text(size=(80, 1), key="-MSG-")],
-        [sg.Listbox(values=[], key="-RESULT-", size=(200, 16), enable_events=True, no_scrollbar=True,)],
+        [sg.Listbox(values=[], key="-RESULT-", size=(200, 16), enable_events=True, no_scrollbar=True, )],
         [sg.Button("  Abrir  ", key="-SHOW-", button_color='gray', mouseover_colors='dodger blue', disabled=True),
          sg.VSeparator(pad=260),
          sg.Button("  Salir  ", button_color='gray', mouseover_colors='red')]
@@ -112,7 +112,8 @@ def main():
                 window["-MSG-"].update("Su consulta retornó {} archivos.".format(len(data)))
                 lines = []
                 for d in data:
-                    lines.append("{:<10}".format(d[0]) + "{:<70}".format(d[1][:60]) + "\t" + ("Spam" if d[2] == 1 else "No spam"))
+                    lines.append("{:<10}".format(d[0]) + "{:<70}".format(d[1][:60]) + "\t" + (
+                        "Spam" if d[2] == 1 else "No spam"))
                 window["-RESULT-"].update(lines)
             except:
                 pass
@@ -128,9 +129,10 @@ def main():
 
         elif event == "-SHOW-":  # A file was chosen from the listbox
             try:
-                doc = "{} - {}".format(full_data[selected_doc][0], "Spam" if full_data[selected_doc][2] == 1 else "No spam")
+                doc = "{} - {}".format(full_data[selected_doc][0],
+                                       "Spam" if full_data[selected_doc][2] == 1 else "No spam")
                 layout2 = [[sg.Multiline(enable_events=True, disabled=True, size=(200, 15),
-                                       key="-TEXT-", no_scrollbar=True, default_text=full_data[selected_doc][1])]]
+                                         key="-TEXT-", no_scrollbar=True, default_text=full_data[selected_doc][1])]]
                 window2 = sg.Window(doc, layout2, size=(400, 200))
                 event2, values2 = window2.read()
             except:
@@ -142,7 +144,3 @@ def main():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
-# hello_world.py
-

@@ -17,4 +17,3 @@ def get_data():
 def process_index():
     # Here we will call the inverted ranked indexation
     return True
-
