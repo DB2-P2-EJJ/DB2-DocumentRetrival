@@ -188,7 +188,7 @@ class MailInvertedIndex:
             os.makedirs(directory)
         self._built_block_index()
         self._block_sorting(0, self._n_index_block - 1)
-        # self._documents_normalization()
+        self._documents_normalization()
         self._save_n()
 
     def __init__(self):
@@ -253,7 +253,8 @@ class MailInvertedIndex:
     def _get_tfidf(self, tf):
         q_terms = [t[0] for t in tf]
         freqs = [t[1] for t in tf]
-        v_query = [np.log10(self._N / len(self._get_term_frequencies(t)) for t in q_terms)]
+        v_query = [math.log10(self._N / len(self._get_term_frequencies(t))) for t in q_terms if
+                   self._get_term_frequencies(t)]
         return np.dot(freqs, v_query)
 
     def _get_length_block_path(self, index):

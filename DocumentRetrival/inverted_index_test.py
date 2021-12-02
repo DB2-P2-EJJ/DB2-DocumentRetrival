@@ -11,6 +11,11 @@ class InvertedIndexTest(unittest.TestCase):
         self.assertTrue(mii.is_sorted())
         shutil.rmtree(os.getcwd() / Path('email.mii'))
 
+    def test_query(self):
+        mii = MailInvertedIndex()
+        q = "line"
+        mii.query(q, 15)
+
 
 if __name__ == '__main__':
     unittest.main()
