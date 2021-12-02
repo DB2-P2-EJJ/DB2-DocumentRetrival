@@ -229,9 +229,9 @@ class MailInvertedIndex:
             mid = (low + high) // 2
             block = self._get_block(direc, mid)
             block_keys = sorted(block.keys())
-            if block[block_keys[0]] > x or not block:
+            if block_keys[0] > x or not block:
                 high = mid - 1
-            elif block[block_keys[-1]] < x:
+            elif block_keys[-1] < x:
                 low = mid + 1
             else:
                 res = mid
