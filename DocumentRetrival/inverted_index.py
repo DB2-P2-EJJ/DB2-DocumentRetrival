@@ -230,11 +230,13 @@ class MailInvertedIndex:
         res = -1
         while low <= high:
             mid = (low + high) // 2
+            # if low < 0 or high < 0 or mid < 0:
+            # print(low, high, mid)
             block = self._get_block(direc, mid)
             block_keys = sorted(block.keys())
-            if block_keys[0] > x or not block:
+            if not block or str(block_keys[0]) > str(x):
                 high = mid - 1
-            elif block_keys[-1] < x:
+            elif str(block_keys[-1]) < str(x):
                 low = mid + 1
             else:
                 res = mid
@@ -258,6 +260,8 @@ class MailInvertedIndex:
         freqs = [t[1] for t in tf]
         v_query = [math.log10(self._N / len(self._get_term_frequencies(t))) for t in q_terms if
                    self._get_term_frequencies(t)]
+        print("v_query", v_query)
+        print("freqs", freqs)
         return np.dot(freqs, v_query)
 
     def _get_length_block_path(self, index):
@@ -273,7 +277,7 @@ class MailInvertedIndex:
 
     def _get_doc_normalization(self, doc):
         bp = self._binary_search(doc, self._n_length_block, "length")
-        return 0.0 if bp == -1 else self._get_block("length", bp)[doc]
+        return 0.0 if bp == -1 else list(self._get_block("length", bp).values())[doc]
 
     def query(self, text, k=15):
         score = {}
@@ -281,14 +285,14 @@ class MailInvertedIndex:
         query_terms = [t[0] for t in tf]
         w_query = self._get_tfidf(tf)
         for term in query_terms:
-            list_pub = self._index[term]['pub']
-            idf = self._index[term]['idf']
+            list_pub = self._get_term_frequencies(term)
+            idf = len(list_pub)
             for (doc_id, tf) in list_pub:
                 if doc_id not in score:
                     score[doc_id] = 0
                 tf_idf_doc = tf * idf
-                score[doc_id] += tf_idf_doc * w_query[term]
-        norm_query = np.linalg.norm(query_terms)
+                score[doc_id] += tf_idf_doc * w_query
+        norm_query = np.linalg.norm([t[1] for t in self._terms_frequency(text)])
         for doc_id in score:
             score[doc_id] = score[doc_id] / (self._get_doc_normalization(doc_id) * norm_query)
         result = sorted(score.items(), reverse=True, key=lambda tup: tup[1])
