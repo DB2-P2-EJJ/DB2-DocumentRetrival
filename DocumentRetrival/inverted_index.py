@@ -163,7 +163,9 @@ class MailInvertedIndex:
             for mail in csv_reader:
                 terms = self._terms_frequency(mail[1])
                 for i in range(len(terms)):
-                    terms[i][1] *= math.log10(self._N / len(self._get_term_frequencies(terms[i][0])))
+                    t = list(terms[i])
+                    t[1] *= math.log10(self._N / len(self._get_term_frequencies(terms[i][0])))
+                    terms[i] = tuple(t)
                 terms = [t[1] for t in terms]
                 temp_length[mail[0]] = np.linalg.norm(terms)
                 if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
@@ -230,9 +232,9 @@ class MailInvertedIndex:
             mid = (low + high) // 2
             block = self._get_block(direc, mid)
             block_keys = sorted(block.keys())
-            if block[block_keys[0]] > x or not block:
+            if block_keys[0] > x or not block:
                 high = mid - 1
-            elif block[block_keys[-1]] < x:
+            elif block_keys[-1] < x:
                 low = mid + 1
             else:
                 res = mid
