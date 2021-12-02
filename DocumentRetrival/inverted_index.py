@@ -169,7 +169,7 @@ class MailInvertedIndex:
             for mail in csv_reader:
                 terms = self._terms_frequency(mail[1])
                 for i in range(len(terms)):
-                    terms[i][1] *= math.log10(self._N / len(self._get_term(terms[i][0])))
+                    terms[i][1] *= math.log10(self._N / len(self._get_term_frequencies(terms[i][0])))
                 temp_length[mail[0]] = np.linalg.norm(terms)
                 if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
                     self._save_block('length', self._n_length_block, self._length)
@@ -259,10 +259,20 @@ class MailInvertedIndex:
         else:
             return None
 
+    def _get_term_frequencies(self, term):
+        bp = self._binary_search(0, self._N - 1, term)
+        block = self._get_block("index", bp)
+        result = []
+        while term in block:
+            result = list(merge(result, block[term]))
+            bp += 1
+            block = self._get_block("index", bp)
+        return result
+
     def _get_tfidf(self, tf):
         q_terms = [t[0] for t in tf]
         freqs = [t[1] for t in tf]
-        v_query = [np.log10(self._N / len(self._binary_search(0, self._N, t)) for t in q_terms)]
+        v_query = [np.log10(self._N / len(self._get_term_frequencies(t)) for t in q_terms)]
         return np.dot(freqs, v_query)
 
     def _get_length_block_path(self, index):
@@ -276,7 +286,7 @@ class MailInvertedIndex:
                 block = json.load(f)
         return block
 
-    def _get_norms(self, index):
+    def _get_doc_normalization(self, index):
         # pendiente
         return
 
@@ -299,7 +309,7 @@ class MailInvertedIndex:
                 score[doc_id] += tf_idf_doc * w_query[term]
         norm_query = self._compute_norm(query_terms)
         index_norms = self._norms
-        # self._get_norms()
+        # self._get_doc_normalization()
         for doc_id in score:
             score[doc_id] = score[doc_id] / (index_norms * norm_query)
         result = sorted(score.items(), reverse=True, key=lambda tup: tup[1])
