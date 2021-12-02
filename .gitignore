@@ -1,5 +1,7 @@
 .idea/
 *.mii/
+__pycache__/
+
 # Prerequisites
 *.d
 
