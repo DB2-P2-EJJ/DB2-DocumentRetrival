@@ -214,11 +214,11 @@ class MailInvertedIndex:
         if not self._load_inverted_index():
             self._built_inverted_index()
 
-    def isSorted(self):
+    def is_sorted(self):
         for i in range(1, self._n_index_block):
             b1, b2 = self._get_block('index', i - 1), self._get_block('index', i)
-            if b1 == {} or b2 == {}:
-                break
+            if b2 == {}:
+                pass
             b1_keys, b2_keys = sorted(b1.keys()), sorted(b2.keys())
             if b1_keys[-1] > b2_keys[0]:
                 return False
