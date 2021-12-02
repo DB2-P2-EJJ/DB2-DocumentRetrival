@@ -8,7 +8,7 @@ from pathlib import Path
 class InvertedIndexTest(unittest.TestCase):
     def test_constructor(self):
         mii = MailInvertedIndex()
-        self.assertTrue(mii.isSorted())
+        self.assertTrue(mii.is_sorted())
         shutil.rmtree(os.getcwd() / Path('email.mii'))
 
 
