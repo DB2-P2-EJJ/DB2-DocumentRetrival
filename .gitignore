@@ -1,6 +1,6 @@
-.idea/
-*.mii/
-__pycache__/
+**/.idea/
+**/*.mii/
+**/__pycache__/
 
 # Prerequisites
 *.d
