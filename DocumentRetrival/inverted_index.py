@@ -28,11 +28,11 @@ class MailInvertedIndex:
     def _load_inverted_index(self):
         if not self._inverted_index_dir_exists():
             return False
-        temp = [self._N, self._n_index_block, self._n_length_block]
+        temp = [self.N, self.n_index_block, self.n_length_block]
         for index in range(len(self._files)):
             with open(self._files[index], 'rb') as f:
                 temp[index] = pickle.load(f)
-        self._N, self._n_index_block, self._n_length_block = temp[0], temp[1], temp[2]
+        self.N, self.n_index_block, self.n_length_block = temp[0], temp[1], temp[2]
         return True
 
     def _terms_frequency(self, text):
@@ -72,18 +72,18 @@ class MailInvertedIndex:
             next(csv_reader)
             temp_index = {}
             for mail in csv_reader:
-                self._N += 1
+                self.N += 1
                 index = self._built_index_mail(mail)
                 for (t, ld) in index.items():
                     temp_index[t] = ld if t not in temp_index else list(merge(temp_index[t], ld))
                     if sys.getsizeof(temp_index) > constant.BLOCK_INDEX_SIZE:
-                        self._save_block('index', self._n_index_block, self._index)
-                        self._n_index_block += 1
+                        self._save_block('index', self.n_index_block, self._index)
+                        self.n_index_block += 1
                         temp_index = {t: ld}
                         self._index = {}
                     self._index[t] = ld if t not in self._index else list(merge(self._index[t], ld))
-        self._save_block('index', self._n_index_block, self._index)
-        self._n_index_block += 1
+        self._save_block('index', self.n_index_block, self._index)
+        self.n_index_block += 1
         self._index = {}
 
     def _move_block_from_temp_index_to_index(self, i, j):
@@ -166,22 +166,22 @@ class MailInvertedIndex:
                 for i in range(len(terms)):
                     t = list(terms[i])
                     ter = self._get_term_frequencies(terms[i][0])
-                    t[1] *= 1 if len(ter) == 0 else math.log10(self._N / len(ter))
+                    t[1] *= 1 if len(ter) == 0 else math.log10(self.N / len(ter))
                     terms[i] = tuple(t)
                     tfidf = [t[1] for t in terms]
                     temp_length[int(mail[0])] = np.linalg.norm(tfidf)
                     if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
-                        self._save_block('length', self._n_length_block, self._length)
-                        self._n_length_block += 1
+                        self._save_block('length', self.n_length_block, self._length)
+                        self.n_length_block += 1
                         temp_length = {int(mail[0]): np.linalg.norm(tfidf)}
                         self._length = {}
                     self._length[int(mail[0])] = np.linalg.norm(tfidf)
-        self._save_block('length', self._n_length_block, self._length)
-        self._n_length_block += 1
+        self._save_block('length', self.n_length_block, self._length)
+        self.n_length_block += 1
         self._length = {}
 
     def _save_n(self):
-        data = [self._N, self._n_index_block, self._n_length_block]
+        data = [self.N, self.n_index_block, self.n_length_block]
         i = 0
         for file in self._files:
             with open(file, 'wb') as f:
@@ -192,7 +192,7 @@ class MailInvertedIndex:
         for directory in self._dirs:
             os.makedirs(directory)
         self._built_block_index()
-        self._block_sorting(0, self._n_index_block - 1)
+        self._block_sorting(0, self.n_index_block - 1)
         self._documents_normalization()
         self._save_n()
 
@@ -207,22 +207,24 @@ class MailInvertedIndex:
 
         self._index = {}
         self._length = {}
-        self._N = 0
-        self._n_index_block = 0
-        self._n_length_block = 0
+        self.N = 0
+        self.n_index_block = 0
+        self.n_length_block = 0
 
         self._norms = {}
 
         if not self._load_inverted_index():
             self._built_inverted_index()
-        self._documents_normalization()
+        # self._documents_normalization()
 
-    def is_sorted(self, directory):
-        for i in range(1, self._n_index_block):
+    def is_sorted(self, directory, n):
+        for i in range(1, self.n_index_block):
             b1, b2 = self._get_block(directory, i - 1), self._get_block(directory, i)
             if not b2:
                 continue
             b1_keys, b2_keys = sorted(b1.keys()), sorted(b2.keys())
+            if directory == 'length':
+                b1_keys, b2_keys = [int(k) for k in b1_keys], [int(k) for k in b2_keys]
             if b1_keys[-1] > b2_keys[0]:
                 return False
         return True
@@ -245,7 +247,7 @@ class MailInvertedIndex:
         return res
 
     def _get_term_frequencies(self, term):
-        bp = self._binary_search(term, self._n_index_block, "index")
+        bp = self._binary_search(term, self.n_index_block, "index")
         if bp == -1:
             return []
         block = self._get_block("index", bp)
@@ -259,7 +261,7 @@ class MailInvertedIndex:
     def _get_tfidf(self, tf):
         q_terms = [t[0] for t in tf]
         freqs = [t[1] for t in tf]
-        v_query = [math.log10(self._N / len(self._get_term_frequencies(t))) for t in q_terms if
+        v_query = [math.log10(self.N / len(self._get_term_frequencies(t))) for t in q_terms if
                    self._get_term_frequencies(t)]
         print("v_query", v_query)
         print("freqs", freqs)
@@ -277,7 +279,7 @@ class MailInvertedIndex:
         return block
 
     def _get_doc_normalization(self, doc):
-        bp = self._binary_search(doc, self._n_length_block, "length")
+        bp = self._binary_search(doc, self.n_length_block, "length")
         return 0.0 if bp == -1 else list(self._get_block("length", bp).values())[doc]
 
     def query(self, text, k=15):
