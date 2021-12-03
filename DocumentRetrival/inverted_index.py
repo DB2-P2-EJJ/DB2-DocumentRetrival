@@ -214,9 +214,9 @@ class MailInvertedIndex:
         if not self._load_inverted_index():
             self._built_inverted_index()
 
-    def is_sorted(self):
+    def is_sorted(self, directory):
         for i in range(1, self._n_index_block):
-            b1, b2 = self._get_block('index', i - 1), self._get_block('index', i)
+            b1, b2 = self._get_block(directory, i - 1), self._get_block(directory, i)
             if not b2:
                 continue
             b1_keys, b2_keys = sorted(b1.keys()), sorted(b2.keys())
@@ -230,8 +230,6 @@ class MailInvertedIndex:
         res = -1
         while low <= high:
             mid = (low + high) // 2
-            # if low < 0 or high < 0 or mid < 0:
-            # print(low, high, mid)
             block = self._get_block(direc, mid)
             block_keys = sorted(block.keys())
             if not block or block_keys[0] > x:

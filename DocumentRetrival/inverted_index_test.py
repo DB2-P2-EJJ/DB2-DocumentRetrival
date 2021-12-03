@@ -8,20 +8,17 @@ from pathlib import Path
 class InvertedIndexTest(unittest.TestCase):
     def test_constructor(self):
         mii = MailInvertedIndex()
-        self.assertTrue(mii.is_sorted())
-        shutil.rmtree(os.getcwd() / Path('email.mii'))
+        self.assertTrue(mii.is_sorted('index'))
+        self.assertTrue(mii.is_sorted('length'))
+        # shutil.rmtree(os.getcwd() / Path('email.mii'))
 
     def test_query(self):
         mii = MailInvertedIndex()
         q = "line"
         print("query 1: ", mii.query(q, 15))
-        shutil.rmtree(os.getcwd() / Path('email.mii'))
-
-
-    def test_query_2(self):
-        mii2 = MailInvertedIndex()
         q = "the best hunting"
-        print("query 2: ", mii2.query(q, 15))
+        print("query 2: ", mii.query(q, 15))
+        self.assertTrue(True)
         shutil.rmtree(os.getcwd() / Path('email.mii'))
 
 
