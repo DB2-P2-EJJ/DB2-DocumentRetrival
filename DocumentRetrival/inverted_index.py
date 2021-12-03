@@ -32,6 +32,7 @@ class MailInvertedIndex:
         for index in range(len(self._files)):
             with open(self._files[index], 'rb') as f:
                 temp[index] = pickle.load(f)
+        self._N, self._n_index_block, self._n_length_block = temp[0], temp[1], temp[2]
         return True
 
     def _terms_frequency(self, text):
@@ -164,16 +165,17 @@ class MailInvertedIndex:
                 terms = self._terms_frequency(mail[1])
                 for i in range(len(terms)):
                     t = list(terms[i])
-                    t[1] *= math.log10(self._N / len(self._get_term_frequencies(terms[i][0])))
+                    ter = self._get_term_frequencies(terms[i][0])
+                    t[1] *= 1 if len(ter) == 0 else math.log10(self._N / len(ter))
                     terms[i] = tuple(t)
-                terms = [t[1] for t in terms]
-                temp_length[int(mail[0])] = np.linalg.norm(terms)
-                if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
-                    self._save_block('length', self._n_length_block, self._length)
-                    self._n_length_block += 1
-                    temp_length = {int(mail[0]): np.linalg.norm(terms)}
-                    self._length = {}
-                self._length[int(mail[0])] = np.linalg.norm(terms)
+                    tfidf = [t[1] for t in terms]
+                    temp_length[int(mail[0])] = np.linalg.norm(tfidf)
+                    if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
+                        self._save_block('length', self._n_length_block, self._length)
+                        self._n_length_block += 1
+                        temp_length = {int(mail[0]): np.linalg.norm(tfidf)}
+                        self._length = {}
+                    self._length[int(mail[0])] = np.linalg.norm(tfidf)
         self._save_block('length', self._n_length_block, self._length)
         self._n_length_block += 1
         self._length = {}
@@ -213,6 +215,7 @@ class MailInvertedIndex:
 
         if not self._load_inverted_index():
             self._built_inverted_index()
+        self._documents_normalization()
 
     def is_sorted(self, directory):
         for i in range(1, self._n_index_block):
