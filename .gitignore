@@ -1,5 +1,5 @@
 # Index directory
-**/*.mii/
+# **/*.mii/
 
 # Compile files
 **/.idea/
