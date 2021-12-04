@@ -1,3 +1,13 @@
+# Index directory
+**/*.mii/
+
+# Compile files
+**/.idea/
+**/__pycache__/
+
+# Compress files
+*.zip
+
 # Prerequisites
 *.d
 
