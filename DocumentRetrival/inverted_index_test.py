@@ -15,14 +15,10 @@ class InvertedIndexTest(unittest.TestCase):
         mii = MailInvertedIndex()
         q = "line"
         print("query 1: ", mii.query(q, 15))
-        shutil.rmtree(os.getcwd() / Path('email.mii'))
-
-
-    def test_query_2(self):
-        mii2 = MailInvertedIndex()
-        q = "the best hunting"
-        print("query 2: ", mii2.query(q, 15))
-        shutil.rmtree(os.getcwd() / Path('email.mii'))
+        q2 = "the best hunting"
+        print("query 2: ", mii.query(q2, 15))
+        # shutil.rmtree(os.getcwd() / Path('email.mii'))
+        self.assertTrue(True)
 
 
 if __name__ == '__main__':

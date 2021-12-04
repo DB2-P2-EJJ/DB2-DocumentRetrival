@@ -1,3 +1,5 @@
+from DocumentRetrival.inverted_index import MailInvertedIndex
+
 sample_body = [[12345, "Subject: stock promo mover : cwtd * * * urgent investor trading alert * * * weekly stock pick "
                 + "- - china world trade corp . ( ticker : cwtd ) * * breaking news * * china world trade corp ."
                 + "enters into agreement to acquire majority stake in ceo clubs china ", 1],
@@ -10,10 +12,20 @@ sample_body = [[12345, "Subject: stock promo mover : cwtd * * * urgent investor 
                 + " . however", 1]]
 
 
-def get_data():
-    return sample_body
+def get_data(query, mii, csv):
+    q = mii.query(query, 15)
+    body = []
+    for doc in q:
+        doc_id = doc[0]
+        row = csv[csv["id"] == doc_id]
+        # body.append([row["id"], row["Body"], row["Label"]])
+        body.append(row.values[0])
+    return body
 
 
-def process_index():
-    # Here we will call the inverted ranked indexation
-    return True
+def process_index(file):
+    print("Indexa", file)
+    mii = MailInvertedIndex(file)
+    is_correct = mii.is_sorted()
+    print("Indexado")
+    return mii, is_correct

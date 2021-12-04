@@ -1,18 +1,21 @@
 import PySimpleGUI as sg
 import os.path
+import pandas as pd
 
 from call_index import get_data, process_index
 
 # Set path from computer
-BROWSE_PATH = "/home/jlr/Desktop/CICLO6/BD2/PROJECTS/CSV"
+BROWSE_PATH = os.getcwd()+"/Dataset"
 selected_filename = None
 query = None
 full_data = None
 selected_doc = None
+mii_index = None
+original_data = None
 
 
 def main():
-    global selected_filename, query, full_data, selected_doc
+    global BROWSE_PATH, selected_filename, query, full_data, selected_doc, mii_index, original_data
     sg.theme("Reddit")
     file_list_row = [
         [
@@ -47,7 +50,7 @@ def main():
         [sg.HorizontalSeparator()],
         [table_viewer_row]
     ]
-    window = sg.Window("Motor de Búsqueda", layout, size=(720, 720))
+    window = sg.Window("Motor de Búsqueda", layout, size=(720, 720), location=(1000, 150))
 
     # Run the Event Loop
     while True:
@@ -78,23 +81,24 @@ def main():
                 )
                 selected_filename = filename
 
-            except:
-                pass
+            except Exception as e:
+                print(e)
         elif event == "-INDEX-":
             try:
                 if selected_filename is None:
                     window["-TOUT-"].update("Seleccione un archivo para indexar.")
                     continue
 
-                success = process_index()
+                mii_index, success = process_index(selected_filename)
                 if success:
-                    window["-TOUT-"].update("El archivo {} fue procesado\nexitósamente!".format(selected_filename))
+                    original_data = pd.read_csv(selected_filename)
+                    window["-TOUT-"].update("El archivo {} fue procesado exitósamente!".format(selected_filename))
                 else:
-                    window["-TOUT-"].update("No se pudo procesar UnU")
+                    window["-TOUT-"].update("Error al indexar el archivo.")
                     window["-MSG-"].update(filename=selected_filename)
 
-            except:
-                pass
+            except Exception as e:
+                print(e)
         elif event == "-QUERY-":
             try:
                 query = values["-QUERY-"]
@@ -103,11 +107,11 @@ def main():
 
         elif event == "-SEARCH-":
             try:
-                if query is None or len(query) < 4:
+                if query is None or len(query) < 1:
                     window["-MSG-"].update("Consulta no válida.")
                     continue
 
-                data = get_data()
+                data = get_data(query, mii_index, original_data)
                 full_data = data
                 window["-MSG-"].update("Su consulta retornó {} archivos.".format(len(data)))
                 lines = []
@@ -133,7 +137,7 @@ def main():
                                        "Spam" if full_data[selected_doc][2] == 1 else "No spam")
                 layout2 = [[sg.Multiline(enable_events=True, disabled=True, size=(200, 15),
                                          key="-TEXT-", no_scrollbar=True, default_text=full_data[selected_doc][1])]]
-                window2 = sg.Window(doc, layout2, size=(400, 200))
+                window2 = sg.Window(doc, layout2, size=(400, 200), location=(1200, 300))
                 event2, values2 = window2.read()
             except:
                 pass

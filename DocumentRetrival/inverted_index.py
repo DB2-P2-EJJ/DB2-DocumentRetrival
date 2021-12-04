@@ -1,7 +1,7 @@
 import os
 import sys
 import math
-import constant
+import mii_constant
 import pickle
 import json
 import numpy as np
@@ -32,6 +32,7 @@ class MailInvertedIndex:
         for index in range(len(self._files)):
             with open(self._files[index], 'rb') as f:
                 temp[index] = pickle.load(f)
+        self._N, self._n_index_block, self._n_length_block = temp[0], temp[1], temp[2]
         return True
 
     def _terms_frequency(self, text):
@@ -66,7 +67,8 @@ class MailInvertedIndex:
         return index
 
     def _built_block_index(self):
-        with open(constant.DATA_FILE_NAME, 'r') as f:
+        # with open(constant.DATA_FILE_NAME, 'r') as f:
+        with open(self._DATA_FILE_NAME, 'r') as f:
             csv_reader = reader(f)
             next(csv_reader)
             temp_index = {}
@@ -75,7 +77,7 @@ class MailInvertedIndex:
                 index = self._built_index_mail(mail)
                 for (t, ld) in index.items():
                     temp_index[t] = ld if t not in temp_index else list(merge(temp_index[t], ld))
-                    if sys.getsizeof(temp_index) > constant.BLOCK_INDEX_SIZE:
+                    if sys.getsizeof(temp_index) > mii_constant.BLOCK_INDEX_SIZE:
                         self._save_block('index', self._n_index_block, self._index)
                         self._n_index_block += 1
                         temp_index = {t: ld}
@@ -112,7 +114,7 @@ class MailInvertedIndex:
                     else:
                         kp2 += 1
                 temp_b3[key] = ld
-                if sys.getsizeof(temp_b3) > constant.BLOCK_INDEX_SIZE:
+                if sys.getsizeof(temp_b3) > mii_constant.BLOCK_INDEX_SIZE:
                     self._save_block('temp_index', wp, b3)
                     wp += 1
                     temp_b3 = {key: ld}
@@ -133,7 +135,7 @@ class MailInvertedIndex:
                     key = keys[k]
                     ld = list(merge(temp_b3[key], b[key])) if key in temp_b3 else b[key]
                     temp_b3[key] = ld
-                    if sys.getsizeof(temp_b3) > constant.BLOCK_INDEX_SIZE:
+                    if sys.getsizeof(temp_b3) > mii_constant.BLOCK_INDEX_SIZE:
                         self._save_block('temp_index', wp, b3)
                         wp += 1
                         temp_b3 = {key: ld}
@@ -156,7 +158,8 @@ class MailInvertedIndex:
             self._merge_blocks(i, mid, mid + 1, j)
 
     def _documents_normalization(self):
-        with open(constant.DATA_FILE_NAME, 'r') as f:
+        # with open(constant.DATA_FILE_NAME, 'r') as f:
+        with open(self._DATA_FILE_NAME, 'r') as f:
             csv_reader = reader(f)
             next(csv_reader)
             temp_length = {}
@@ -168,7 +171,7 @@ class MailInvertedIndex:
                     terms[i] = tuple(t)
                 terms = [t[1] for t in terms]
                 temp_length[mail[0]] = np.linalg.norm(terms)
-                if sys.getsizeof(temp_length) > constant.BLOCK_INDEX_SIZE:
+                if sys.getsizeof(temp_length) > mii_constant.BLOCK_INDEX_SIZE:
                     self._save_block('length', self._n_length_block, self._length)
                     self._n_length_block += 1
                     temp_length = {mail[0]: np.linalg.norm(terms)}
@@ -194,10 +197,11 @@ class MailInvertedIndex:
         self._documents_normalization()
         self._save_n()
 
-    def __init__(self):
+    def __init__(self, index_path=None):
         self._stop_words = set(stopwords.words('english') + ['subject'])
         self._stemmer = PorterStemmer()
 
+        self._DATA_FILE_NAME = index_path if index_path else mii_constant.DATA_FILE_NAME
         self._inverted_index_path = os.getcwd() / Path('email.mii')
         self._dirs = [self._inverted_index_path / p for p in [Path('index'), Path('length'), Path('temp_index')]]
         self._files = [self._inverted_index_path / p for p in
@@ -228,19 +232,32 @@ class MailInvertedIndex:
         low = 0
         high = n - 1
         res = -1
-        while low <= high:
-            mid = (low + high) // 2
-            # if low < 0 or high < 0 or mid < 0:
-            # print(low, high, mid)
-            block = self._get_block(direc, mid)
-            block_keys = sorted(block.keys())
-            if not block or str(block_keys[0]) > str(x):
-                high = mid - 1
-            elif str(block_keys[-1]) < str(x):
-                low = mid + 1
-            else:
-                res = mid
-                high = mid - 1
+        if direc == "index":
+            while low <= high:
+                mid = (low + high) // 2
+                block = self._get_block(direc, mid)
+                block_keys = sorted(block.keys())
+                if not block or block_keys[0] > str(x):
+                    high = mid - 1
+                elif block_keys[-1] < str(x):
+                    low = mid + 1
+                else:
+                    res = mid
+                    high = mid - 1
+        if direc == "length":
+            while low <= high:
+                mid = (low + high) // 2
+                block = self._get_block(direc, mid)
+                int_keys = map(int, block.keys())
+                block_keys = sorted(list(int_keys))
+                # block_keys = sorted(int(block.keys()))
+                if not block or block_keys[0] > x:
+                    high = mid - 1
+                elif block_keys[-1] < x:
+                    low = mid + 1
+                else:
+                    res = mid
+                    high = mid - 1
         return res
 
     def _get_term_frequencies(self, term):
@@ -277,7 +294,7 @@ class MailInvertedIndex:
 
     def _get_doc_normalization(self, doc):
         bp = self._binary_search(doc, self._n_length_block, "length")
-        return 0.0 if bp == -1 else list(self._get_block("length", bp).values())[doc]
+        return 0.0 if bp == -1 else self._get_block("length", bp)[str(doc)]
 
     def query(self, text, k=15):
         score = {}
