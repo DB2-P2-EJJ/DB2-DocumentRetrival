@@ -215,7 +215,6 @@ class MailInvertedIndex:
 
         if not self._load_inverted_index():
             self._built_inverted_index()
-        # self._documents_normalization()
 
     def is_sorted(self, directory, n):
         for i in range(1, self.n_index_block):
