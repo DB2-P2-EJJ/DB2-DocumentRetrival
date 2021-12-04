@@ -277,8 +277,8 @@ class MailInvertedIndex:
         freqs = [t[1] for t in tf]
         v_query = [math.log10(self._N / len(self._get_term_frequencies(t))) for t in q_terms if
                    self._get_term_frequencies(t)]
-        print("v_query", v_query)
-        print("freqs", freqs)
+        # print("v_query", v_query)
+        # print("freqs", freqs)
         return np.dot(freqs, v_query)
 
     def _get_length_block_path(self, index):
